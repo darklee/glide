@@ -115,7 +115,7 @@ public abstract class Downsampler implements BitmapDecoder<InputStream> {
             int orientation = 0;
             try {
                 orientation = new ImageHeaderParser(stream).getOrientation();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 if (Log.isLoggable(TAG, Log.WARN)) {
                     Log.w(TAG, "Cannot determine the image orientation from header", e);
                 }
