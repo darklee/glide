@@ -405,7 +405,7 @@ public class GenericRequestBuilder<ModelType, DataType, ResourceType, TranscodeT
         return animate(new ViewPropertyAnimationFactory<TranscodeType>(animator));
     }
 
-    GenericRequestBuilder<ModelType, DataType, ResourceType, TranscodeType> animate(
+    public GenericRequestBuilder<ModelType, DataType, ResourceType, TranscodeType> animate(
             GlideAnimationFactory<TranscodeType> animationFactory) {
         if (animationFactory == null) {
             throw new NullPointerException("Animation factory must not be null!");
