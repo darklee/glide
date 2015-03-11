@@ -44,7 +44,7 @@ public class DrawableCrossFadeViewAnimation<T extends Drawable> implements Glide
         Drawable previous = adapter.getCurrentDrawable();
         if (previous != null) {
             TransitionDrawable transitionDrawable = new TransitionDrawable(new Drawable[] { previous, current });
-            transitionDrawable.setCrossFadeEnabled(true);
+            transitionDrawable.setCrossFadeEnabled(false);
             transitionDrawable.startTransition(duration);
             adapter.setDrawable(transitionDrawable);
             return true;
