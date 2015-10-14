@@ -22,6 +22,6 @@ public class GlideBitmapDrawableResource extends DrawableResource<GlideBitmapDra
 
     @Override
     public void recycle() {
-        bitmapPool.put(drawable.getBitmap());
+        drawable.recycle(bitmapPool);
     }
 }

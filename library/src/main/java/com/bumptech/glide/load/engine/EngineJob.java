@@ -76,7 +76,10 @@ class EngineJob implements EngineRunnable.EngineRunnableManager {
     public void addCallback(ResourceCallback cb) {
         Util.assertMainThread();
         if (hasResource) {
-            cb.onResourceReady(engineResource);
+            throw new IllegalStateException("理论上不会调到这里？如果调到这里了则状态有问题");
+            //@custom 这里没有像handleResultOnMainThread一样，在使用onResourceReady前进行acquire
+            //engineResource.acquire();
+            //cb.onResourceReady(engineResource);
         } else if (hasException) {
             cb.onException(exception);
         } else {

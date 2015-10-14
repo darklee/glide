@@ -2,6 +2,7 @@ package com.bumptech.glide.load.resource.bitmap;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
@@ -11,10 +12,12 @@ import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 
+import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 
 /**
- * A static {@link com.bumptech.glide.load.resource.drawable.GlideDrawable} for displaying a single image.
+ * A static {@link com.bumptech.glide.load.resource.drawable.GlideDrawable} for displaying a single
+ * image.
  */
 public class GlideBitmapDrawable extends GlideDrawable {
     private final Rect destRect = new Rect();
@@ -24,11 +27,14 @@ public class GlideBitmapDrawable extends GlideDrawable {
     private boolean mutated;
     private BitmapState state;
 
+    private Throwable constructTrace;
+
     public GlideBitmapDrawable(Resources res, Bitmap bitmap) {
         this(res, new BitmapState(bitmap));
     }
 
     GlideBitmapDrawable(Resources res, BitmapState state) {
+        this.constructTrace = new Throwable("Construct Trace");
         if (state == null) {
             throw new NullPointerException("BitmapState must not be null");
         }
@@ -98,6 +104,10 @@ public class GlideBitmapDrawable extends GlideDrawable {
             Gravity.apply(BitmapState.GRAVITY, width, height, getBounds(), destRect);
             applyGravity = false;
         }
+        if (state.bitmap == NULL) {
+            Error error = new Error("Recycled Bitmap", this.recycleTrace);
+            throw error;
+        }
         canvas.drawBitmap(state.bitmap, null, destRect, state.paint);
     }
 
@@ -120,7 +130,8 @@ public class GlideBitmapDrawable extends GlideDrawable {
     public int getOpacity() {
         Bitmap bm = state.bitmap;
         return bm == null || bm.hasAlpha() || state.paint.getAlpha() < 255
-                ? PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
+                ? PixelFormat.TRANSLUCENT
+                : PixelFormat.OPAQUE;
     }
 
     @Override
@@ -136,12 +147,22 @@ public class GlideBitmapDrawable extends GlideDrawable {
         return state.bitmap;
     }
 
+    private static final Bitmap NULL = Bitmap.createBitmap(1, 1, Config.RGB_565);
+    private Throwable recycleTrace;
+
+    public void recycle(BitmapPool pool) {
+        // XXX: test recycle bitmap
+        pool.put(this.state.bitmap);
+        this.state.bitmap = NULL;
+        this.recycleTrace = new Throwable("Recycle Trace", this.constructTrace);
+    }
+
     static class BitmapState extends ConstantState {
         private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
         private static final Paint DEFAULT_PAINT = new Paint(DEFAULT_PAINT_FLAGS);
         private static final int GRAVITY = Gravity.FILL;
 
-        final Bitmap bitmap;
+        Bitmap bitmap;
 
         int targetDensity;
         Paint paint = DEFAULT_PAINT;
@@ -149,7 +170,6 @@ public class GlideBitmapDrawable extends GlideDrawable {
         public BitmapState(Bitmap bitmap) {
             this.bitmap = bitmap;
         }
-
 
         BitmapState(BitmapState other) {
             this(other.bitmap);
